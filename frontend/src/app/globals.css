@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+:root {
+  --wa-bg: #0b141a;
+  --wa-header-bg: #202c33;
+  --wa-input-bg: #2a3942;
+  --wa-outgoing-bg: #005c4b;
+  --wa-incoming-bg: #202c33;
+  --wa-text-primary: #e9edef;
+  --wa-text-secondary: #8696a0;
+  --wa-blue-tick: #53bdeb;
+}
+
+body {
+  background-color: #0b141a;
+  background-image: radial-gradient(#1f2c34 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+  color: #e9edef;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- WHATSAPP BUBBLE STYLES --- */
+.wa-user-bubble {
+  background-color: #005c4b;
+  color: #e9edef;
+  border-radius: 8px 8px 0px 8px;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+.wa-assistant-bubble {
+  background-color: #202c33;
+  color: #e9edef;
+  border-radius: 8px 8px 8px 0px;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+}
+
+/* --- RUFUS HEARTBEAT ANIMATION --- */
+@keyframes pulse-heartbeat {
+  0% { opacity: 0.5; transform: scale(0.985); }
+  50% { opacity: 1.0; transform: scale(1.015); }
+  100% { opacity: 0.5; transform: scale(0.985); }
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+  40% { opacity: 1.0; transform: scale(1.25); }
+}
+
+.rufus-thinking-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #182229;
+  border: 1px solid #2a3942;
+  border-radius: 16px;
+  animation: pulse-heartbeat 1.6s infinite ease-in-out;
+}
+
+.rufus-thinking-text {
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #00a884;
+}
+
+.dot-loader-wa {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.dot-loader-wa span {
+  width: 6px;
+  height: 6px;
+  background-color: #00a884;
+  border-radius: 50%;
+  display: inline-block;
+  animation: dot-pulse 1.4s infinite ease-in-out both;
+}
+
+.dot-loader-wa span:nth-child(1) { animation-delay: -0.32s; }
+.dot-loader-wa span:nth-child(2) { animation-delay: -0.16s; }
+.dot-loader-wa span:nth-child(3) { animation-delay: 0s; }
+
+/* Scrollbar styling for WhatsApp chat container */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #374248;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4a575d;
+}
