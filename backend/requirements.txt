@@ -26,7 +26,7 @@ langgraph==0.2.3
 langchain-google-vertexai==1.0.8
 langchain-community==0.2.12
 langchain-openai==0.1.22
-pydantic==2.8.2
+pydantic==2.13.4
 pydantic-settings==2.4.0
 
 # --- GUARDRAILS ---
