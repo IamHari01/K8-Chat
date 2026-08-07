@@ -29,22 +29,16 @@ services:
       - qdrant
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
 
-  ui:
+  frontend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./frontend
     ports:
-      - "8501:8501"
+      - "3000:3000"
     environment:
-      BACKEND_URL: http://api:8080
-      LOGFIRE_IGNORE_NO_CONFIG: "1"
-    env_file:
-      - .env
-    volumes:
-      - ./ui:/app/ui:ro
+      NEXT_PUBLIC_BACKEND_URL: http://api:8080
     depends_on:
       - api
-    command: ["streamlit", "run", "ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+    command: ["npm", "run", "dev"]
 
 volumes:
   qdrant-data:
