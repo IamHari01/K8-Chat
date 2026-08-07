@@ -1,4 +1,4 @@
-# ⚡ K8 Chat — Enterprise AI Security Gateway & RAG System
+# ⚡ K8 Chat — Kubernetes AI Assistent
 
 > **A Production-Grade, Security-Hardened AI Chatbot for Enterprise Kubernetes Infrastructure.**  
 > Built with **Next.js 16 (App Router)**, **React 19**, **FastAPI**, **LangGraph**, **Portkey LLM Gateway**, **Qdrant Cloud**, **Jina AI**, **Neon Postgres**, and **Upstash Redis**.
