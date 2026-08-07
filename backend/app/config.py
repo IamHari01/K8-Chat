@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     JINA_API_KEY: str
 
     # --- OPENAI LLM ---
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: str | None = None
     JUDGE_OPENAI_API_KEY: str | None = None
 
     # --- PORTKEY LLM GATEWAY ---
