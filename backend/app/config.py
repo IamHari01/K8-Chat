@@ -70,9 +70,9 @@ class Settings(BaseSettings):
         return v
 
     @property
-    def judge_api_key(self) -> str:
-        """Dedicated judge key, falling back to the main OpenAI key."""
-        return self.JUDGE_OPENAI_API_KEY or self.OPENAI_API_KEY
+    def judge_api_key(self) -> str | None:
+        """Dedicated judge key, falling back to OpenAI key, then Portkey key."""
+        return self.JUDGE_OPENAI_API_KEY or self.OPENAI_API_KEY or self.PORTKEY_API_KEY
 
     @property
     def postgres_uri(self) -> str:
