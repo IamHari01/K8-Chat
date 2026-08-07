@@ -28,8 +28,6 @@ dependencies = [
     "slowapi==0.1.9",
 
     # --- JINA API EMBEDDINGS + LOCAL FALLBACK ---
-    "sentence-transformers==3.2.1",
-    "torch==2.5.1",
 
     # --- LANGCHAIN & AGENTIC ORCHESTRATION ---
     "langchain==1.2.18",
