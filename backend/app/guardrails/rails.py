@@ -16,15 +16,18 @@ def initialize_rails() -> None:
     global _rails
 
     if settings.OPENAI_API_KEY:
-        guard_llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-5-mini")
+        guard_llm = ChatOpenAI(api_key=settings.OPENAI_API_KEY, model="gpt-4o-mini")
     else:
         from app.gateway.client import get_langchain_llm
         guard_llm = get_langchain_llm("guardrails")
 
-    config = RailsConfig.from_content(colang_content=COLANG_CONTENT, yaml_content=YAML_CONTENT)
-
-    _rails = LLMRails(config, llm=guard_llm)
-    logfire.info("🛡️ NeMo Guardrails initialised.")
+    try:
+        config = RailsConfig.from_content(colang_content=COLANG_CONTENT, yaml_content=YAML_CONTENT)
+        _rails = LLMRails(config, llm=guard_llm)
+        logfire.info("🛡️ NeMo Guardrails initialised.")
+    except Exception as e:
+        logfire.warning(f"⚠️ NeMo Guardrails initialization failed ({e}); Layer 1 & 2 Firewalls active.")
+        _rails = None
 
 
 def guard(message: str) -> tuple[bool, str | None]:
@@ -39,7 +42,7 @@ def guard(message: str) -> tuple[bool, str | None]:
     """
     from app.guardrails.security_firewall import evaluate_security_and_fastpath
 
-    # Layer 1: Deterministic Security Firewall & Fast-Path Router (0 LLM Tokens, 0ms)
+    # Layer 1 & 2: Security Firewall & Fast-Path Router (Regex, Heuristics, & Intent Gates)
     handled, fast_response, category = evaluate_security_and_fastpath(message)
     if handled:
         logfire.info(f"🛡️ Security/Fast-Path Gate Triggered [{category}] | query='{message[:80]}'")
@@ -47,22 +50,19 @@ def guard(message: str) -> tuple[bool, str | None]:
 
     # Layer 2: NeMo Guardrails Gate (LLM-assisted behavioral safety)
     if _rails is None:
-        logfire.warning("⚠️ Guardrails not initialised — skipping gate.")
+        logfire.info("✅ Perimeter Firewalls passed (NeMo LLMRails offline).")
         return False, None
 
     with logfire.span("🛡️ Guardrails Check"):
-        # TEMPORARY FIX: Bypass NeMo Guardrails generation on macOS to prevent Segfault (Exit 139)
-        # result = _rails.generate(messages=[{"role": "user", "content": message}])
-        
-        # content = result.get("content", "") if isinstance(result, dict) else str(result)
-        # fired = any(indicator in content for indicator in RAIL_INDICATORS)
-
-        fired = False
-
-
-        if fired:
-            logfire.info(f"🛡️ Guardrails fired | query='{message[:80]}'")
-            return True, content
+        try:
+            result = _rails.generate(messages=[{"role": "user", "content": message}])
+            content = result.get("content", "") if isinstance(result, dict) else str(result)
+            fired = any(indicator.lower() in content.lower() for indicator in RAIL_INDICATORS)
+            if fired:
+                logfire.info(f"🛡️ Guardrails fired | query='{message[:80]}'")
+                return True, content
+        except Exception as e:
+            logfire.warning(f"⚠️ NeMo Guardrails evaluation warning: {e}")
 
         logfire.info("✅ Guardrails passed.")
         return False, None

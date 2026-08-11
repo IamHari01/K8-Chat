@@ -33,8 +33,17 @@ class Settings(BaseSettings):
     PORTKEY_PRIMARY_SLUG: str = "marathon-api"
     PORTKEY_FALLBACK_SLUG: str = "anthropic-fallback"
     # Portkey saved config is referenced by its system-generated `pc-...` ID.
-    # Required when block_inline_config is enabled on the workspace.
-    PORTKEY_PRIMARY_CONFIG_ID: str
+    PORTKEY_PRIMARY_CONFIG_ID: str | None = None
+
+    # --- MULTI-KEY GROQ & PORTKEY VIRTUAL KEYS (Load Balancing & Fallbacks) ---
+    GROQ_API_KEY_1: str | None = None
+    GROQ_API_KEY_2: str | None = None
+    GROQ_API_KEY_3: str | None = None
+    GROQ_API_KEY_4: str | None = None
+    PORTKEY_VIRTUAL_KEY_1: str | None = None
+    PORTKEY_VIRTUAL_KEY_2: str | None = None
+    PORTKEY_VIRTUAL_KEY_3: str | None = None
+    PORTKEY_VIRTUAL_KEY_4: str | None = None
 
     # --- QDRANT VECTOR DB ---
     QDRANT_URL: str = Field(validation_alias=AliasChoices("QDRANT_URL", "QDRANT_CLUSTER_ENDPOINT"))

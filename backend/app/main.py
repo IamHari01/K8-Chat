@@ -252,6 +252,8 @@ def query(
         GUARDRAILS_BLOCKS_TOTAL.labels(blocked="false").inc()
 
         try:
+            if not hasattr(app.state, "rag_agent") or app.state.rag_agent is None:
+                app.state.rag_agent = build_graph()
             rag_agent = app.state.rag_agent
             initial_state = {
                 "messages": [{"role": "user", "content": q}],

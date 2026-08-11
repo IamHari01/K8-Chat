@@ -13,16 +13,95 @@ from app.config import settings
 
 
 def _make_headers(feature: str = "rag") -> dict:
-    """Build Portkey headers that reference the primary saved config by ID."""
-    if not settings.PORTKEY_PRIMARY_CONFIG_ID:
-        raise ValueError(
-            "PORTKEY_PRIMARY_CONFIG_ID is not set in .env. "
-            "Get the real pc-... ID from the Portkey dashboard or "
-            "run: PYTHONPATH=. python scripts/list_portkey_configs.py"
+    """Build Portkey headers supporting Saved Configs or Inline Multi-Key Load Balancing & 4 Fallbacks."""
+    # Mode 1: Saved Config ID (e.g. pc-groq-4-223853)
+    if settings.PORTKEY_PRIMARY_CONFIG_ID:
+        headers = createHeaders(
+            api_key=settings.PORTKEY_API_KEY,
+            config=settings.PORTKEY_PRIMARY_CONFIG_ID,
+            metadata={
+                "feature": feature,
+                "_user": "rag-system",
+                "environment": "production",
+            },
         )
+        headers["x-portkey-cache"] = "simple"
+        return headers
+
+    # Mode 2: Multi-Key Groq API Keys or Virtual Keys (Load Balance + Sequential Fallbacks)
+    groq_keys = [
+        k for k in [
+            settings.GROQ_API_KEY_1,
+            settings.GROQ_API_KEY_2,
+            settings.GROQ_API_KEY_3,
+            settings.GROQ_API_KEY_4,
+        ] if k
+    ]
+    virtual_keys = [
+        vk for vk in [
+            settings.PORTKEY_VIRTUAL_KEY_1,
+            settings.PORTKEY_VIRTUAL_KEY_2,
+            settings.PORTKEY_VIRTUAL_KEY_3,
+            settings.PORTKEY_VIRTUAL_KEY_4,
+        ] if vk
+    ]
+
+    models = [
+        "llama-3.3-70b-versatile",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "mixtral-8x7b-32768",
+    ]
+
+    targets = []
+    if groq_keys:
+        weight = round(1.0 / len(groq_keys), 2)
+        for idx, key in enumerate(groq_keys):
+            model = models[idx % len(models)]
+            targets.append({
+                "provider": "groq",
+                "api_key": key,
+                "override_params": {"model": model},
+                "weight": weight,
+            })
+    elif virtual_keys:
+        weight = round(1.0 / len(virtual_keys), 2)
+        for idx, vk in enumerate(virtual_keys):
+            model = models[idx % len(models)]
+            targets.append({
+                "virtual_key": vk,
+                "override_params": {"model": model},
+                "weight": weight,
+            })
+    else:
+        targets = [
+            {
+                "provider": "groq",
+                "override_params": {"model": "llama-3.3-70b-versatile"},
+            }
+        ]
+
+    # Optional OpenAI Fallback Target
+    if settings.OPENAI_API_KEY:
+        targets.append({
+            "provider": "openai",
+            "api_key": settings.OPENAI_API_KEY,
+            "override_params": {"model": "gpt-4o-mini"},
+        })
+
+    config_dict = {
+        "strategy": {"mode": "loadbalance" if len(targets) > 1 else "single"},
+        "targets": targets,
+        "retry": {
+            "attempts": 3,
+            "on_status_codes": [429, 500, 502, 503, 504],
+        },
+        "cache": {"mode": "simple"},
+    }
+
     headers = createHeaders(
         api_key=settings.PORTKEY_API_KEY,
-        config=settings.PORTKEY_PRIMARY_CONFIG_ID,
+        config=config_dict,
         metadata={
             "feature": feature,
             "_user": "rag-system",
