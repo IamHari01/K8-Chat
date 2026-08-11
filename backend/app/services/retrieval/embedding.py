@@ -1,3 +1,4 @@
+import functools
 import logfire
 import requests
 from tenacity import before_sleep_log, retry, stop_after_attempt, wait_exponential
@@ -12,6 +13,9 @@ _FALLBACK_MODEL = "mixedbread-ai/mxbai-embed-large-v1"
 
 _active_model = None
 _model_type: str | None = None  # "jina" or "fallback"
+
+# Persistent HTTP Session with TCP Keep-Alive
+_session = requests.Session()
 
 
 # ── Model initialisation ───────────────────────────────────────────────────────
@@ -32,7 +36,7 @@ def _probe_jina_api() -> bool:
         return False
 
     try:
-        response = requests.post(
+        response = _session.post(
             _JINA_EMBEDDING_URL,
             headers={
                 "Authorization": f"Bearer {settings.JINA_API_KEY}",
@@ -44,7 +48,7 @@ def _probe_jina_api() -> bool:
                 "normalized": True,
                 "input": ["probe"],
             },
-            timeout=30,
+            timeout=10,
         )
         response.raise_for_status()
         payload = response.json()
@@ -90,8 +94,8 @@ def get_embedding_dim() -> int:
     before_sleep=before_sleep_log(logfire, "warning"),
 )
 def _embed_jina_batch(texts: list[str], task: str) -> list[list[float]]:
-    """Call the Jina Embeddings API for a single batch."""
-    response = requests.post(
+    """Call the Jina Embeddings API for a single batch using pooled connection."""
+    response = _session.post(
         _JINA_EMBEDDING_URL,
         headers={
             "Authorization": f"Bearer {settings.JINA_API_KEY}",
@@ -103,13 +107,12 @@ def _embed_jina_batch(texts: list[str], task: str) -> list[list[float]]:
             "normalized": True,
             "input": texts,
         },
-        timeout=60,
+        timeout=15,
     )
     response.raise_for_status()
     payload = response.json()
 
     results = payload.get("data", [])
-    # Sort by index because the API may not preserve order in rare cases
     results_sorted = sorted(results, key=lambda x: x.get("index", 0))
     return [item["embedding"] for item in results_sorted]
 
@@ -170,12 +173,19 @@ def _embed(texts: list[str], task: str) -> list[list[float]]:
     return _embed_fallback(texts)
 
 
-# ── Public API (same signatures as before) ─────────────────────────────────────
+# ── Public API ──────────────────────────────────────────────────────────────────
+
+
+@functools.lru_cache(maxsize=2048)
+def _embed_query_cached(query: str) -> tuple[float, ...]:
+    """Cached query vector computation."""
+    vec = _embed([query], task="retrieval.query")[0]
+    return tuple(vec)
 
 
 def embed_query(query: str) -> list[float]:
-    """Embed a single query."""
-    return _embed([query], task="retrieval.query")[0]
+    """Embed a single query with in-memory LRU cache to eliminate redundant network roundtrips."""
+    return list(_embed_query_cached(query))
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:

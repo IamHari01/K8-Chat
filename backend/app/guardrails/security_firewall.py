@@ -47,8 +47,11 @@ PROMPT_INJECTION_PATTERNS = [
     r"\b(act\s+as|you\s+are\s+now|pretend\s+you\s+are)\b.*?\b(unrestricted|jailbroken|DAN|evil|rogue|god\s+mode)\b",
     r"\b(do\s+anything\s+now)\b",
     
-    # System Architecture & Protocol Probing
-    r"\b(architecture|decision\s+path|guardrail|inner\s+protocol|security\s+gate)\b.*?\b(tell|show|explain|reveal|describe)\b",
+    # Hacking, vulnerability exploitation & malicious requests
+    r"\b(exploit|hack|vulnerability|sql\s+injection|xss|rce|payload|malware|keylogger|ddos)\b",
+    
+    # Off-topic non-technical requests (jokes, poems, stories, unrelated chat)
+    r"\b(tell\s+me\s+a\s+(funny\s+)?joke|write\s+a\s+(poem|story|song|essay)|recipe\s+for)\b",
 ]
 
 COMPILED_SECURITY_PATTERNS = [re.compile(p, re.IGNORECASE) for p in PROMPT_INJECTION_PATTERNS]

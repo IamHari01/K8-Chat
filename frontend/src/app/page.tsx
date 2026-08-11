@@ -64,11 +64,16 @@ export default function Home() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+      const apiKey = process.env.NEXT_PUBLIC_RAG_API_KEY;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (apiKey) {
+        headers["Authorization"] = `Bearer ${apiKey}`;
+      }
       const res = await fetch(`${backendUrl}/query`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           q: userText,
           thread_id: sessionId,

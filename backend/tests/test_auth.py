@@ -17,7 +17,7 @@ def test_query_open_when_no_api_key_configured():
         with patch("app.main.guard") as mock_guard:
             mock_guard.return_value = (True, "blocked")
             response = client.post("/query", json={"q": "hi"})
-        assert response.json()["status"] == "Blocked by guardrails."
+        assert response.json()["status"] == "Handled at Perimeter Shield."
     finally:
         settings.API_KEY = original_key
 

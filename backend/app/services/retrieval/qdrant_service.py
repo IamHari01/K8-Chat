@@ -10,8 +10,14 @@ from app.services.retrieval.embedding import embed_query, get_embedding_dim
 client = QdrantClient(url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY)
 
 
+_collection_checked = False
+
+
 def ensure_collection_exists():
     """Ensure the target Qdrant collection exists before search/upsert."""
+    global _collection_checked
+    if _collection_checked:
+        return True
     try:
         if not client.collection_exists(settings.QDRANT_COLLECTION):
             dim = get_embedding_dim()
@@ -20,7 +26,7 @@ def ensure_collection_exists():
                 vectors_config=models.VectorParams(size=dim, distance=models.Distance.COSINE),
             )
             logfire.info(f"Created Qdrant collection '{settings.QDRANT_COLLECTION}' ({dim}-dim).")
-            return True
+        _collection_checked = True
         return True
     except Exception as e:
         logfire.warning(f"Collection check warning: {e}")

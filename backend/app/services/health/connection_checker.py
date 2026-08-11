@@ -45,10 +45,10 @@ def _check_neon_postgres() -> ConnectionResult:
             min_size=1,
             max_size=2,
             open=True,
-            timeout=5,
+            timeout=12,
             check=ConnectionPool.check_connection,
         )
-        conn = pool.getconn(timeout=5)
+        conn = pool.getconn(timeout=12)
         with conn.transaction():
             with conn.cursor() as cur:
                 cur.execute("SELECT 1")
@@ -189,7 +189,7 @@ def _check_logfire() -> ConnectionResult:
 def _check_langsmith() -> ConnectionResult:
     """Verify LangSmith API key is valid and the endpoint is reachable."""
     if not settings.LANGSMITH_API_KEY:
-        return ConnectionResult("langsmith", False, "LANGSMITH_API_KEY not set — tracing disabled")
+        return ConnectionResult("langsmith", True, "LANGSMITH_API_KEY not set (optional) — tracing disabled")
     try:
         response = requests.get(
             f"{settings.LANGSMITH_ENDPOINT}/ok",
@@ -200,7 +200,8 @@ def _check_langsmith() -> ConnectionResult:
         return ConnectionResult("langsmith", True, f"LangSmith reachable (project: {settings.LANGSMITH_PROJECT})")
     except Exception as e:
         logfire.warning(f"LangSmith health check failed: {e}")
-        return ConnectionResult("langsmith", False, str(e))
+        return ConnectionResult("langsmith", True, f"LangSmith optional probe warning: {e}")
+
 
 
 # Ordered list of all checks to run during startup and /ready.

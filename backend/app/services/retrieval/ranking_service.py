@@ -12,15 +12,15 @@ _JINA_RERANK_MODEL = "jina-reranker-v3"
 _FALLBACK_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 _ranker = None
-_fallback_ranker = None
+_session = requests.Session()
 
 
 class _JinaReranker:
-    """Thin wrapper around the Jina Reranker API."""
+    """Thin wrapper around the Jina Reranker API with connection pooling."""
 
     def rerank(self, query: str, documents: list[str], top_n: int) -> list[str]:
         """Score and reorder documents against the query via the Jina API."""
-        response = requests.post(
+        response = _session.post(
             _JINA_RERANK_URL,
             headers={
                 "Authorization": f"Bearer {settings.JINA_API_KEY}",
@@ -33,7 +33,7 @@ class _JinaReranker:
                 "top_n": top_n,
                 "return_documents": True,
             },
-            timeout=60,
+            timeout=10,
         )
         response.raise_for_status()
         payload = response.json()
@@ -83,16 +83,16 @@ def _fallback_rerank(query: str, documents: list[str], top_n: int) -> list[str]:
     """Score and reorder documents against the query via the local CrossEncoder."""
     if not documents:
         return []
-    ranker = _get_fallback_ranker()
-    # Create pairs of (query, document)
-    pairs = [[query, doc] for doc in documents]
-    scores = ranker.predict(pairs)
-    
-    # Pair documents with their scores and sort descending
-    doc_score_pairs = list(zip(documents, scores))
-    doc_score_pairs.sort(key=lambda x: x[1], reverse=True)
-    
-    return [doc for doc, _ in doc_score_pairs[:top_n]]
+    try:
+        ranker = _get_fallback_ranker()
+        pairs = [[query, doc] for doc in documents]
+        scores = ranker.predict(pairs)
+        doc_score_pairs = list(zip(documents, scores))
+        doc_score_pairs.sort(key=lambda x: x[1], reverse=True)
+        return [doc for doc, _ in doc_score_pairs[:top_n]]
+    except Exception as e:
+        logfire.warning(f"Fallback reranker unavailable ({e}) - returning input order.")
+        return documents[:top_n]
 
 
 @retry(

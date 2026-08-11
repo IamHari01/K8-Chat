@@ -43,5 +43,5 @@ def test_query_blocks_guardrails():
 
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "Blocked by guardrails."
+    assert data["status"] == "Handled at Perimeter Shield."
     assert data["answer"] == "Blocked message"
