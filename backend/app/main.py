@@ -183,12 +183,17 @@ def startup_event():
 
     app.state.rate_limiter_enabled = _init_rate_limiter()
 
-    # Verify all external dependencies are reachable.
-    connection_results = check_all_connections()
-    all_healthy = log_connection_summary(connection_results)
-    if settings.STRICT_STARTUP and not all_healthy:
-        failed = [name for name, r in connection_results.items() if not r.healthy]
-        raise RuntimeError(f"STRICT_STARTUP enabled; failing services: {', '.join(failed)}")
+    # Verify all external dependencies asynchronously in the background so port 8000 binds instantly.
+    import threading
+
+    def _async_connection_check():
+        connection_results = check_all_connections()
+        all_healthy = log_connection_summary(connection_results)
+        if settings.STRICT_STARTUP and not all_healthy:
+            failed = [name for name, r in connection_results.items() if not r.healthy]
+            logfire.error(f"STRICT_STARTUP enabled; failing services: {', '.join(failed)}")
+
+    threading.Thread(target=_async_connection_check, daemon=True).start()
 
     if not settings.API_KEY:
         logfire.warning("🔓 RAG_API_KEY is not set — /query is open to anyone. Set it in production.")

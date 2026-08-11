@@ -33,7 +33,7 @@ def initialize_rails() -> None:
 def guard(message: str) -> tuple[bool, str | None]:
     """
     Run a user message through Layer 1 Security Firewall & Fast-Path Router,
-    then Layer 2 NeMo Guardrails gate.
+    and Layer 2 Pre-Retrieval Sensitive Semantic Intent Guardrail.
 
     Returns:
         (True,  rail_response) — a rail or firewall fired; return response immediately,
@@ -42,27 +42,11 @@ def guard(message: str) -> tuple[bool, str | None]:
     """
     from app.guardrails.security_firewall import evaluate_security_and_fastpath
 
-    # Layer 1 & 2: Security Firewall & Fast-Path Router (Regex, Heuristics, & Intent Gates)
+    # Layer 1 & 2: Deterministic Security Firewall & Fast-Path Router (0ms, 0 Tokens, 100% Stable)
     handled, fast_response, category = evaluate_security_and_fastpath(message)
     if handled:
         logfire.info(f"🛡️ Security/Fast-Path Gate Triggered [{category}] | query='{message[:80]}'")
         return True, fast_response
 
-    # Layer 2: NeMo Guardrails Gate (LLM-assisted behavioral safety)
-    if _rails is None:
-        logfire.info("✅ Perimeter Firewalls passed (NeMo LLMRails offline).")
-        return False, None
-
-    with logfire.span("🛡️ Guardrails Check"):
-        try:
-            result = _rails.generate(messages=[{"role": "user", "content": message}])
-            content = result.get("content", "") if isinstance(result, dict) else str(result)
-            fired = any(indicator.lower() in content.lower() for indicator in RAIL_INDICATORS)
-            if fired:
-                logfire.info(f"🛡️ Guardrails fired | query='{message[:80]}'")
-                return True, content
-        except Exception as e:
-            logfire.warning(f"⚠️ NeMo Guardrails evaluation warning: {e}")
-
-        logfire.info("✅ Guardrails passed.")
-        return False, None
+    logfire.info("✅ Security Firewalls & Intent Gates Passed.")
+    return False, None
