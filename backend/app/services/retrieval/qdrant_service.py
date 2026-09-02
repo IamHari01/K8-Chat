@@ -1,3 +1,7 @@
+import glob
+import json
+import os
+import re
 import logfire
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
@@ -33,6 +37,46 @@ def ensure_collection_exists():
         return False
 
 
+def _search_local_docs(query: str, limit: int = 8) -> list[dict]:
+    """Fallback search over local ingested JSON documents when Qdrant Cloud is offline."""
+    words = [w.lower() for w in re.findall(r"\w+", query) if len(w) > 2]
+    scored_chunks = []
+    base_dir = os.path.join(os.getcwd(), "processed_data", "true")
+    if not os.path.exists(base_dir):
+        return []
+
+    for fname in os.listdir(base_dir):
+        if not fname.endswith(".json"):
+            continue
+        fpath = os.path.join(base_dir, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                source_name = fname.replace(".json", "")
+                text_blocks = []
+                if isinstance(data, list):
+                    text_blocks = [str(item) for item in data]
+                elif isinstance(data, dict):
+                    for k, v in data.items():
+                        if isinstance(v, list):
+                            text_blocks.extend([str(item) for item in v])
+                        elif isinstance(v, str):
+                            text_blocks.append(v)
+
+                for block in text_blocks:
+                    block_lower = block.lower()
+                    score = sum(block_lower.count(w) for w in words)
+                    if score > 0:
+                        scored_chunks.append(
+                            {"content": block, "source": source_name, "score": float(score)}
+                        )
+        except Exception:
+            pass
+
+    scored_chunks.sort(key=lambda x: x["score"], reverse=True)
+    return scored_chunks[:limit]
+
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=1, max=5),
@@ -40,6 +84,7 @@ def ensure_collection_exists():
     before_sleep=before_sleep_log(logfire, "warning"),
 )
 def _search_enterprise_knowledge(query: str, limit: int = 8):
+
     """Internal search with retry logic."""
     ensure_collection_exists()
     query_vector = embed_query(query)
@@ -63,10 +108,14 @@ def _search_enterprise_knowledge(query: str, limit: int = 8):
 def search_enterprise_knowledge(query: str, limit: int = 8):
     """
     Performs a high-precision search in the enterprise knowledge base.
-    Uses modern query_points. Degrades gracefully if collection is empty.
+    Uses modern query_points with fallback to local ingested docs if Qdrant is unreachable.
     """
     try:
-        return _search_enterprise_knowledge(query, limit=limit)
+        res = _search_enterprise_knowledge(query, limit=limit)
+        if res:
+            return res
     except Exception as e:
-        logfire.warning(f"⚠️ Qdrant search returned empty: {e}")
-        return []
+        logfire.warning(f"⚠️ Qdrant search unavailable ({e}); using local document retriever fallback.")
+
+    return _search_local_docs(query, limit=limit)
+

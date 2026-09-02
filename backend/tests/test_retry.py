@@ -11,6 +11,7 @@ def test_qdrant_search_retries_then_returns_empty():
     with (
         patch("app.services.retrieval.qdrant_service.client") as mock_client,
         patch("app.services.retrieval.qdrant_service.embed_query") as mock_embed,
+        patch("app.services.retrieval.qdrant_service._search_local_docs", return_value=[]),
     ):
         mock_embed.return_value = [0.0] * 10
         mock_client.query_points.side_effect = RuntimeError("transient")
@@ -20,6 +21,7 @@ def test_qdrant_search_retries_then_returns_empty():
         assert results == []
         # Tenacity default: initial call + 2 retries = 3 attempts
         assert mock_client.query_points.call_count == 3
+
 
 
 def test_rerank_retries_then_falls_back():
