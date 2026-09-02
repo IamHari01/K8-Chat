@@ -195,8 +195,21 @@ def startup_event():
 
     threading.Thread(target=_async_connection_check, daemon=True).start()
 
+    # eLife anti-inactivity & warmth heartbeat loop (runs every 4 minutes)
+    def _background_warmth_loop():
+        while True:
+            try:
+                time.sleep(240)
+                logfire.info("⚡ eLife Heartbeat: refreshing database & Redis connection warmth...")
+                check_all_connections()
+            except Exception as e:
+                logfire.warning(f"⚠️ eLife Heartbeat loop ping warning: {e}")
+
+    threading.Thread(target=_background_warmth_loop, daemon=True).start()
+
     if not settings.API_KEY:
         logfire.warning("🔓 RAG_API_KEY is not set — /query is open to anyone. Set it in production.")
+
 
 
 class QueryRequest(BaseModel):

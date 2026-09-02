@@ -14,6 +14,8 @@
 - 🧠 **6-Stage Progressive Thinking Workflow**: Real-time status updates (*Understanding query* → *Vector DB search* → *Jina reranking* → *Synthesis*).
 - 💾 **Stateful Conversation Persistence**: LangGraph checkpointer backed by Neon Serverless Postgres.
 - 🚦 **Enterprise Rate Limiting**: Upstash Redis token-bucket rate limiter (`RATE_LIMIT_PER_MINUTE=120`).
+- ⚡ **eLife Anti-Inactivity & Uptime Engine**: 24/7 background heartbeat warmth guardian (`/elife`) with GitHub Actions scheduled keep-alive workflow to prevent cloud database auto-sleep and zero cold-start latency.
+
 
 ---
 

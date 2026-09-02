@@ -59,3 +59,38 @@ def test_ready_returns_503_when_any_dependency_fails():
     data = response.json()
     assert data["status"] == "not_ready"
     assert data["checks"]["qdrant"].startswith("unavailable")
+
+
+def test_elife_endpoint_json():
+    results = {
+        "postgres": _ok("postgres"),
+        "redis": _ok("redis"),
+        "qdrant": _ok("qdrant"),
+        "llm_gateway": _ok("llm_gateway"),
+        "jina_embeddings": _ok("jina_embeddings"),
+        "jina_reranker": _ok("jina_reranker"),
+    }
+    with patch("app.health.check_all_connections", return_value=results):
+        client = TestClient(app)
+        response = client.get("/elife")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "elife" in data
+    assert data["elife"]["status"] == "ALIVE"
+    assert data["elife"]["cold_start_prevention"] == "ACTIVE"
+
+
+def test_elife_endpoint_html():
+    results = {
+        "postgres": _ok("postgres"),
+        "redis": _ok("redis"),
+    }
+    with patch("app.health.check_all_connections", return_value=results):
+        client = TestClient(app)
+        response = client.get("/elife?format=html")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Enterprise RAG eLife Engine" in response.text
+

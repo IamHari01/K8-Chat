@@ -1,0 +1,23 @@
+name: eLife Anti-Inactivity Guardian
+
+on:
+  schedule:
+    # Run every 10 minutes 24/7 to keep serverless services and cloud endpoints warm
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  heartbeat:
+    name: Ping Production Endpoints & Maintain Warmth
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Production Backend Endpoints
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://enterprise-rag.onrender.com' }}
+        run: |
+          echo "⚡ Sending eLife heartbeat ping to $BACKEND_URL..."
+          curl -s -f -m 15 "$BACKEND_URL/health" || echo "⚠️ /health ping failed or sleeping"
+          curl -s -f -m 15 "$BACKEND_URL/ready" || echo "⚠️ /ready ping failed or sleeping"
+          curl -s -f -m 15 "$BACKEND_URL/elife" || echo "⚠️ /elife ping failed or sleeping"
+          echo "✅ eLife heartbeat complete."
