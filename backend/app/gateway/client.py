@@ -47,8 +47,8 @@ def _make_headers(feature: str = "rag") -> dict:
     ]
 
     models = [
-        "llama-3.1-70b-versatile",
-        "llama-3.1-70b-versatile",
+        "llama-3.3-70b-versatile",
+        "llama-3.3-70b-versatile",
         "llama-3.1-8b-instant",
         "mixtral-8x7b-32768",
     ]
@@ -77,7 +77,7 @@ def _make_headers(feature: str = "rag") -> dict:
         targets = [
             {
                 "provider": "groq",
-                "override_params": {"model": "llama-3.1-70b-versatile"},
+                "override_params": {"model": "llama-3.3-70b-versatile"},
             }
         ]
 
@@ -199,7 +199,7 @@ def get_langchain_llm(feature: str = "rag") -> BaseChatModel:
     primary = ChatOpenAI(
         api_key=settings.PORTKEY_API_KEY,
         base_url=PORTKEY_GATEWAY_URL,
-        model="llama-3.1-70b-versatile",
+        model="llama-3.3-70b-versatile",
         default_headers=_make_headers(feature),
     )
     fallback = SmartLocalSynthesizerLLM()
