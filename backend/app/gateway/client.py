@@ -90,7 +90,7 @@ def _make_headers(feature: str = "rag") -> dict:
         })
 
     config_dict = {
-        "strategy": {"mode": "loadbalance" if len(targets) > 1 else "single"},
+        "strategy": {"mode": "fallback" if len(targets) > 1 else "single"},
         "targets": targets,
         "retry": {
             "attempts": 3,
