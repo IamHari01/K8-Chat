@@ -154,7 +154,7 @@ def _generate_response(prompt: str):
     """Call the LLM gateway with fallback to eLife synthesizer on error."""
     try:
         return portkey_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama-3.1-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
         )
     except Exception as e:
