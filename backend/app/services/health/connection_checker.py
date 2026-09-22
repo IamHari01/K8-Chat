@@ -103,7 +103,7 @@ def _check_portkey_gateway() -> ConnectionResult:
     """Verify Portkey LLM gateway responds to a minimal completion."""
     try:
         resp = portkey_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-20b",
             messages=[{"role": "user", "content": "Say hello in one word."}],
             max_completion_tokens=100,
             timeout=10,
