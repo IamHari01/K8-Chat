@@ -59,6 +59,7 @@ def generate_node(state: AgentState):
         2. Give a 2-3 sentence core definition/summary first.
         3. Follow up with at most 3-4 bullet points if essential.
         4. Do NOT output generic textbook tutorials, introductory fluff, or long concluding disclaimers.
+        5. If the answer is not present in the TECHNICAL CONTEXT, you MUST clearly state: "I don't have the answer for this in my verified Kubernetes documentation." Do not guess or hallucinate outside the context.
 
         TECHNICAL CONTEXT:
         {full_context}

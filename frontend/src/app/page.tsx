@@ -192,10 +192,10 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <h2 className="text-xl font-bold text-[#e9edef]">
-                  K8 Chat — Enterprise AI Workspace
+                  K8 Chat — Kubernetes Documentation Assistant
                 </h2>
                 <p className="text-xs text-[#8696a0] max-w-md mx-auto leading-relaxed">
-                  Ask technical questions regarding Kubernetes Pods, Scaling, Ingress, Deployments, and Cluster Security.
+                  Ask technical questions regarding Kubernetes. I strictly rely on the official Kubernetes documentation to provide accurate answers. If your question is outside my scope, I will let you know!
                 </p>
               </div>
             </motion.div>

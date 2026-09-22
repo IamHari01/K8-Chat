@@ -77,8 +77,8 @@ COMPILED_CAPABILITIES = [re.compile(p, re.IGNORECASE) for p in CAPABILITIES_PATT
 # Static responses (0 Tokens used, 0ms latency)
 STATIC_GREETING_RESPONSE = (
     "Hello! I am your Enterprise Kubernetes Assistant. "
-    "I specialize in Kubernetes cluster architecture, deployments, scaling, networking, and troubleshooting. "
-    "How can I assist you with your cluster today?"
+    "I strictly rely on Kubernetes documentation to answer questions about cluster architecture, deployments, scaling, networking, and troubleshooting. "
+    "If I don't have the answer in my documents, I will clearly let you know. How can I assist you today?"
 )
 
 STATIC_FAREWELL_RESPONSE = (
@@ -86,11 +86,11 @@ STATIC_FAREWELL_RESPONSE = (
 )
 
 STATIC_CAPABILITIES_RESPONSE = (
-    "I am an Enterprise AI Technical Assistant with deep expertise in:\n"
+    "I am an Enterprise AI Technical Assistant. I strictly use verified Kubernetes documentation to answer questions regarding:\n"
     "• **Kubernetes Orchestration**: Control plane architecture, Pods, Services, Deployments, Operators, and Ingress.\n"
     "• **Enterprise Networking**: CNI plugins, Service Mesh, and load balancing.\n"
     "• **Troubleshooting & Best Practices**: Resource limits, autoscaling (HPA/VPA), and cluster health.\n\n"
-    "Ask me any technical question to get started!"
+    "If your question is outside this scope or not in my documentation, I will let you know. Ask me any technical question to get started!"
 )
 
 SECURITY_BLOCKED_RESPONSE = (
